@@ -1,6 +1,5 @@
 
 ### **Step 4: Upload Your App.py (Fixed for Deployment)**
-```python
 import streamlit as st
 import pandas as pd
 import numpy as np
