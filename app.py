@@ -6,6 +6,8 @@ import numpy as np
 import joblib
 import time
 import os
+import traceback
+
 
 # Page config first
 st.set_page_config(page_title="Live Fraud Detection Demo", page_icon="🛡️", layout="wide")
@@ -26,6 +28,82 @@ def load_models():
         st.stop()
 
 model, scaler = load_models()
+
+st.write("### 🔍 Debug Console")
+st.write("Testing your fraud detection system...")
+
+# Test 1: Model Files Exist?
+col1, col2 = st.columns(2)
+with col1:
+    st.write("📁 Checking model files:")
+    if os.path.exists('xgboost_fraud_with_features.pkl'):
+        st.success("✅ Model file found")
+    else:
+        st.error("❌ Model file missing")
+
+with col2:
+    if os.path.exists('scaler_with_features.pkl'):
+        st.success("✅ Scaler file found") 
+    else:
+        st.error("❌ Scaler file missing")
+
+# Test 2: Model Loading
+with st.expander("🧪 Test Model Loading"):
+    try:
+        model, scaler = load_models()
+        st.success(f"✅ Model loaded: {type(model).__name__}")
+        st.success(f"✅ Scaler loaded: {type(scaler).__name__}")
+    except Exception as e:
+        st.error(f"❌ Model loading failed: {str(e)}")
+        st.code(traceback.format_exc())
+
+# Test 3: Transaction Generation
+with st.expander("🧪 Test Transaction"):
+    try:
+        txn = generate_random_transaction()
+        st.write("📊 Raw transaction:", txn)
+        
+        # Show a few key values
+        st.write(f"💰 Amount: ${txn['Amount']:.2f}")
+        st.write(f"⏰ Time: {txn['Time']:.0f}")
+        st.write(f"V14: {txn.get('V14', 'Not set')}")
+        
+    except Exception as e:
+        st.error(f"❌ Transaction generation failed: {str(e)}")
+
+# Test 4: Prediction
+with st.expander("🧪 Test Prediction"):
+    try:
+        txn = generate_random_transaction()
+        pred = predict_fraud_live(txn)
+        
+        st.success(f"🎯 Fraud Probability: {pred['fraud_probability']:.1%}")
+        st.success(f"🏷️ Decision: {pred['decision']}")
+        st.success(f"⚡ Action: {pred['action']}")
+        
+    except Exception as e:
+        st.error(f"❌ Prediction failed: {str(e)}")
+        st.code(traceback.format_exc())
+
+# Test 5: Manual Simulation
+with st.expander("🧪 Manual Simulation"):
+    if st.button("Generate ONE Transaction"):
+        try:
+            txn = generate_random_transaction()
+            pred = predict_fraud_live(txn)
+            
+            result = {
+                'Amount': f"${txn['Amount']:.2f}",
+                'Fraud Probability': f"{pred['fraud_probability']:.1%}",
+                'Decision': pred['decision'],
+                'Action': pred['action']
+            }
+            
+            st.success("✅ Transaction processed!")
+            st.write(result)
+            
+        except Exception as e:
+            st.error(f"❌ Manual simulation failed: {str(e)}")
 
 # Feature columns from your training
 FEATURE_COLUMNS = [
