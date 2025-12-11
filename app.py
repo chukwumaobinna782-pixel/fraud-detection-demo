@@ -29,6 +29,12 @@ def load_models():
 
 model, scaler = load_models()
 
+FEATURE_COLUMNS = [
+    'Time', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'V10', 'V11', 'V12', 'V13', 'V14', 'V15', 'V16', 'V17', 'V18', 'V19', 'V20', 'V21', 'V22', 'V23', 'V24', 'V25', 'V26', 'V27', 'V28', 'Amount',
+    'Hour', 'Is_night', 'Amount_log', 'Is_Zero_Amount', 'V_sum', 'V_std', 'V_max', 'V_min', 'V3_x_V10', 'V3_x_V12', 'V10_x_V12', 'V11_x_V14', 'V14_x_V17'
+]
+
+
 def generate_random_transaction():
     """Generate a random transaction for simulation"""
     txn = {
