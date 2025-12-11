@@ -28,6 +28,21 @@ def load_models():
         st.stop()
 
 model, scaler = load_models()
+def generate_random_transaction():
+    """Generate a random transaction for simulation"""
+    txn = {
+        'Time': np.random.uniform(0, 172800),  # Up to 2 days in seconds
+        'Amount': np.random.exponential(88.35),  # Skewed like real amounts
+    }
+    for i in range(1, 29):
+        txn[f'V{i}'] = np.random.normal(0, 1)  # PCA features ~ N(0,1)
+    
+    # Occasionally make fraud-like (e.g., low V14, high Amount) ~1% chance
+    if np.random.rand() < 0.01:
+        txn['V14'] = np.random.uniform(-10, -5)  # Common in frauds
+        txn['Amount'] = np.random.uniform(100, 1000)
+
+    return txn
 
 st.write("### 🔍 Debug Console")
 st.write("Testing your fraud detection system...")
