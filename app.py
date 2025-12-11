@@ -28,6 +28,7 @@ def load_models():
         st.stop()
 
 model, scaler = load_models()
+
 def generate_random_transaction():
     """Generate a random transaction for simulation"""
     txn = {
@@ -38,12 +39,59 @@ def generate_random_transaction():
         txn[f'V{i}'] = np.random.normal(0, 1)  # PCA features ~ N(0,1)
     
     # Occasionally make fraud-like (e.g., low V14, high Amount) ~1% chance
-    if np.random.rand() < 0.01:
+    if np.random.rand() < 0.10:
         txn['V14'] = np.random.uniform(-10, -5)  # Common in frauds
         txn['Amount'] = np.random.uniform(100, 1000)
 
     return txn
 
+ # ADD THIS FUNCTION after generate_random_transaction
+def predict_fraud_live(transaction_dict):
+    """Predict fraud probability for a transaction"""
+    try:
+        df_live = pd.DataFrame([transaction_dict])
+
+        # Feature engineering (exactly like your training)
+        df_live['Hour'] = (df_live['Time'] // 3600) % 24
+        df_live['Is_night'] = df_live['Hour'].isin([23, 0, 1, 2, 3, 4, 5]).astype(int)
+        df_live['Amount_log'] = np.log1p(df_live['Amount'])
+        df_live['Is_Zero_Amount'] = (df_live['Amount'] == 0).astype(int)
+
+        v_cols = [f'V{i}' for i in range(1, 29)]
+        df_live['V_sum'] = df_live[v_cols].sum(axis=1)
+        df_live['V_std'] = df_live[v_cols].std(axis=1)
+        df_live['V_max'] = df_live[v_cols].max(axis=1)
+        df_live['V_min'] = df_live[v_cols].min(axis=1)
+
+        df_live['V3_x_V10'] = df_live['V3'] * df_live['V10']
+        df_live['V3_x_V12'] = df_live['V3'] * df_live['V12']
+        df_live['V10_x_V12'] = df_live['V10'] * df_live['V12']
+        df_live['V11_x_V14'] = df_live['V11'] * df_live['V14']
+        df_live['V14_x_V17'] = df_live['V14'] * df_live['V17']
+
+        # Add missing columns
+        for col in FEATURE_COLUMNS:
+            if col not in df_live.columns:
+                df_live[col] = 0
+
+        X_live = df_live[FEATURE_COLUMNS]
+        X_scaled = scaler.transform(X_live)
+
+        # Predict
+        prob = model.predict_proba(X_scaled)[0, 1]
+
+        return {
+            "fraud_probability": round(float(prob), 5),
+            "decision": "🚨 FRAUD - BLOCK" if prob > 0.5 else "✅ APPROVED",
+            "action": "🔒 BLOCK" if prob > 0.8 else ("⚠️ REVIEW" if prob > 0.3 else "✅ APPROVE")
+        }
+    except Exception as e:
+        return {
+            "fraud_probability": 0.0,
+            "decision": f"❌ ERROR: {str(e)}",
+            "action": "ERROR"
+        }
+        
 st.write("### 🔍 Debug Console")
 st.write("Testing your fraud detection system...")
 
