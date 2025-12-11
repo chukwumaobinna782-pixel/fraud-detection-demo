@@ -188,10 +188,8 @@ with col2:
 with col3:
     st.metric("Status", "🟢 RUNNING" if st.session_state.sim_running else "🔴 STOPPED")
 
-# Simulation logic
 if st.session_state.sim_running:
-    current_time = time.time()
-    if current_time - st.session_state.last_update >= 2.0:
+    try:
         txn = generate_random_transaction()
         pred = predict_fraud_live(txn)
         
@@ -208,8 +206,11 @@ if st.session_state.sim_running:
         if len(st.session_state.transactions) > 25:
             st.session_state.transactions = st.session_state.transactions[-25:]
         
-        st.session_state.last_update = current_time
+        # Force rerun to update display
         st.rerun()
+        
+    except Exception as e:
+        st.error(f"Simulation error: {str(e)}")
 
 # Display results
 if st.session_state.transactions:
