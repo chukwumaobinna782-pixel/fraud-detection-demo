@@ -187,7 +187,30 @@ with st.expander("🧪 Manual Simulation"):
             
         except Exception as e:
             st.error(f"❌ Manual simulation failed: {str(e)}")
-
+            
+with st.expander("🚨 Force Fraud Test"):
+    if st.button("Generate OBVIOUS FRAUD"):
+        # Create transaction that should definitely trigger fraud
+        fraud_txn = {
+            'Time': 3600,  # 1 AM
+            'Amount': 850.0,  # High amount
+            'V1': -2, 'V2': -1, 'V3': -8, 'V4': -3, 'V5': -1, 'V6': -2, 'V7': -1, 'V8': -2,
+            'V9': -1, 'V10': -9, 'V11': -6, 'V12': -2, 'V13': -3, 'V14': -12, 'V15': -4,
+            'V16': -2, 'V17': -8, 'V18': -3, 'V19': -1, 'V20': -2, 'V21': -1, 'V22': -2,
+            'V23': -1, 'V24': -2, 'V25': -1, 'V26': -2, 'V27': -1, 'V28': -2
+        }
+        
+        pred = predict_fraud_live(fraud_txn)
+        st.write(f"**Obvious Fraud Transaction:**")
+        st.write(f"Amount: ${fraud_txn['Amount']}")
+        st.write(f"V14: {fraud_txn['V14']} (very low)")  
+        st.write(f"V10: {fraud_txn['V10']} (very low)")
+        st.write(f"**Prediction:** {pred['fraud_probability']:.1%} - {pred['decision']}")
+        
+        if pred['fraud_probability'] > 50:
+            st.success("🎉 Model correctly detected obvious fraud!")
+        else:
+            st.warning("🤔 Model still not detecting - might need more extreme values")
 # Feature columns from your training
 FEATURE_COLUMNS = [
     'Time', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'V10', 'V11', 'V12', 'V13', 'V14', 'V15', 'V16', 'V17', 'V18', 'V19', 'V20', 'V21', 'V22', 'V23', 'V24', 'V25', 'V26', 'V27', 'V28', 'Amount',
