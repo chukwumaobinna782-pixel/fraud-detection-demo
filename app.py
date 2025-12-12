@@ -36,21 +36,35 @@ FEATURE_COLUMNS = [
 
 
 def generate_random_transaction():
-    """Generate a random transaction for simulation"""
+    """Generate realistic fraud patterns that XGBoost can detect"""
+    
+    # Start with normal transaction base
     txn = {
-        'Time': np.random.uniform(0, 172800),  # Up to 2 days in seconds
-        'Amount': np.random.exponential(88.35),  # Skewed like real amounts
+        'Time': np.random.uniform(0, 172800),
+        'Amount': np.random.exponential(88.35),
     }
     for i in range(1, 29):
-        txn[f'V{i}'] = np.random.normal(0, 1)  # PCA features ~ N(0,1)
+        txn[f'V{i}'] = np.random.normal(0, 1)
     
-    # Occasionally make fraud-like (e.g., low V14, high Amount) ~1% chance
-    if np.random.rand() < 0.10:
-        txn['V14'] = np.random.uniform(-10, -5)  # Common in frauds
-        txn['Amount'] = np.random.uniform(100, 1000)
+    # Create realistic fraud patterns (20% chance for better demo)
+    if np.random.rand() < 0.20:  # Changed from 0.10 to 0.20 for better demo
+        
+        # Fraud Pattern 1: High amount + suspicious V features
+        txn['Amount'] = np.random.uniform(200, 1500)
+        txn['V14'] = np.random.uniform(-15, -8)   # Very low V14 (fraud indicator)
+        txn['V17'] = np.random.uniform(-10, -5)   # Low V17
+        txn['V10'] = np.random.uniform(-8, -3)    # Low V10
+        
+        # Fraud Pattern 2: Time-based fraud (night transactions)
+        if np.random.rand() < 0.5:
+            txn['Time'] = np.random.uniform(0, 21600)  # Midnight-6am
+        
+        # Fraud Pattern 3: Multiple suspicious features
+        txn['V3'] = np.random.uniform(-5, -2)
+        txn['V4'] = np.random.uniform(-4, -1)
+        txn['V11'] = np.random.uniform(-6, -2)
 
     return txn
-
  # ADD THIS FUNCTION after generate_random_transaction
 def predict_fraud_live(transaction_dict):
     """Predict fraud probability for a transaction"""
